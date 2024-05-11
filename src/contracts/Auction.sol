@@ -1,18 +1,21 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.4;
+
 contract Auction {
    
-    address payable public beneficiary; //Adresa primaoca
-    uint public auctionEndTime; //Vreme trajanja u sekundama
+    address payable public beneficiary; // Adresa primaoca
+    uint public auctionEndTime; // Vreme trajanja u sekundama
     string private secretMessage; 
 
-    // Trenuno stanje aukcije.
+    // Trenutno stanje aukcije.
     address public highestBidder; 
     uint public highestBid;
 
+    mapping(address => uint[]) public bidsByBidder; // Mapa koja prati sve ponude svakog korisnika
+
     mapping(address => uint) pendingReturns;
 
-    bool ended; 
+    bool ended;
     event HighestBidIncreased(address bidder, uint amount);
     event AuctionEnded(address winner, uint amount);
 
@@ -20,15 +23,17 @@ contract Auction {
     error BidNotHighEnough(uint highestBid);
     error AuctionNotYetEnded();
     error AuctionEndAlreadyCalled();
-   constructor(
+
+    constructor(
         uint biddingTime,
         address payable beneficiaryAddress,
         string memory secret // Parametar za podatke tajne poruke
     ) {
         beneficiary = beneficiaryAddress;
         auctionEndTime = block.timestamp + biddingTime;
-        secretMessage = secret; // Postavljanje tajne poruke
+        secretMessage = secret;
     }
+
     function bid() external payable {
         if (ended)
             revert AuctionAlreadyEnded();
@@ -37,10 +42,13 @@ contract Auction {
             revert BidNotHighEnough(highestBid);
 
         if (highestBid != 0) {
-            pendingReturns[highestBidder] += highestBid;//*Objašnenje
+            pendingReturns[highestBidder] += highestBid;
         }
+        
         highestBidder = msg.sender;
         highestBid = msg.value;
+        bidsByBidder[msg.sender].push(msg.value); // Čuvamo samo iznos ponude
+
         emit HighestBidIncreased(msg.sender, msg.value);
     }
 
@@ -56,26 +64,26 @@ contract Auction {
         }
         return true;
     }
-    function auctionEnd() external {
 
-        // 1. Uslovi
+    function auctionEnd() external {
         if (block.timestamp < auctionEndTime)
             revert AuctionNotYetEnded();
         if (ended)
             revert AuctionEndAlreadyCalled();
 
-        // 2. Efekti
         ended = true;
         emit AuctionEnded(highestBidder, highestBid);
 
-        // 3. Interakcija
         beneficiary.transfer(highestBid);
     }
 
     function getSecretMessage() external view returns (string memory) {
-        // Proveravamo da li je pozivatelj dobitnik aukcije
         require(ended, "The auction has not ended yet.");
         require(msg.sender == highestBidder, "Only the auction winner can access the secret code.");
         return secretMessage;
+    }
+
+    function getBidHistoryByBidder(address bidder) external view returns (uint[] memory) {
+        return bidsByBidder[bidder];
     }
 }

@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import AuctionList from '../AuctionList/AuctionList.js'; 
-import CreateAuctionModal from '../CreateAuctionModal/CreateAuctionModal.js'; 
-import Web3 from 'web3';
-import './Main.css';
-const auctionFactoryAddress = "0xc3389Ebd81599b9bd07C78c057F627B752d1435f";
-const sepoliaRPCUrl = "https://sepolia.infura.io/v3/c15405c891f649b7be2fd974e73c3a3d";
+import React, { useState, useEffect } from "react";
+import AuctionList from "../AuctionList/AuctionList.js";
+import CreateAuctionModal from "../CreateAuctionModal/CreateAuctionModal.js";
+import Web3 from "web3";
+import "./Main.css";
+const auctionFactoryAddress = "0x293656bd6f07Ba929Cb4592A1a90152eC3bbc000";
+const sepoliaRPCUrl =
+  "https://sepolia.infura.io/v3/2358f7fa6a324defaff1d26d980dbf23";
 
 const Main = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -14,10 +15,12 @@ const Main = () => {
   const connectWallet = async () => {
     try {
       if (window.ethereum) {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
         setAccount(accounts[0]);
         console.log("Connected to Ethereum account: ", accounts[0]);
-        window.ethereum.on('accountsChanged', (newAccounts) => {
+        window.ethereum.on("accountsChanged", (newAccounts) => {
           setAccount(newAccounts[0]);
           console.log("Switched to account: ", newAccounts[0]);
         });
@@ -28,7 +31,6 @@ const Main = () => {
       console.error("Error connecting to MetaMask: ", error);
     }
   };
-  
 
   useEffect(() => {
     const web3Instance = new Web3(sepoliaRPCUrl);
@@ -45,17 +47,30 @@ const Main = () => {
           Poveži se sa MetaMaskom
         </button>
       )}
-      
-      <AuctionList className="auction-list" web3={web3} account={account} auctionFactoryAddress={auctionFactoryAddress}/>
-      <button className="create-auction-button" onClick={() => setShowCreateModal(true)}>
+
+      <AuctionList
+        className="auction-list"
+        web3={web3}
+        account={account}
+        auctionFactoryAddress={auctionFactoryAddress}
+      />
+      <button
+        className="create-auction-button"
+        onClick={() => setShowCreateModal(true)}
+      >
         Napravi Aukciju
       </button>
       {showCreateModal && (
-        <CreateAuctionModal className="create-auction-modal" web3={web3} account={account} onClose={() => setShowCreateModal(false)} auctionFactoryAddress = {auctionFactoryAddress}/>
+        <CreateAuctionModal
+          className="create-auction-modal"
+          web3={web3}
+          account={account}
+          onClose={() => setShowCreateModal(false)}
+          auctionFactoryAddress={auctionFactoryAddress}
+        />
       )}
-      
     </div>
   );
-}
+};
 
 export default Main;
